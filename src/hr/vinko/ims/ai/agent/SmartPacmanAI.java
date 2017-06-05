@@ -1,12 +1,12 @@
 package hr.vinko.ims.ai.agent;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Queue;
 import java.util.Random;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.jme3.math.Vector3f;
 
@@ -24,6 +24,8 @@ public class SmartPacmanAI extends AgentAI {
 	private Set<Vector3f> unreachableStates = new HashSet<>();
 	private Vector3f currentTarget;
 
+	private Queue<Vector3f> lastVisited = new LinkedList<>();
+
 	private static int tries = 0;
 
 	@Override
@@ -32,7 +34,12 @@ public class SmartPacmanAI extends AgentAI {
 		int radiusY = mySurroundings.getDimensionY() / 2;
 
 		Vector3f pos = myInfo.getPosition();
-		
+
+		if (lastVisited.size() > 5) {
+			lastVisited.poll();
+		}
+
+		lastVisited.add(pos);
 		targetStates.remove(pos);
 		unreachableStates.remove(pos);
 
@@ -86,9 +93,10 @@ public class SmartPacmanAI extends AgentAI {
 						.get();
 			}
 
-			Vector3f move = target.subtract(pos);
+			
 
 			try {
+				Vector3f move = target.subtract(pos);
 				neighPosInfos = mySurroundings.getWorldInfoAt(move.x, move.y);
 			} catch (Exception e) {
 			}
@@ -122,34 +130,46 @@ public class SmartPacmanAI extends AgentAI {
 		int bestIndex = -1;
 		double bestDistance = Double.MAX_VALUE;
 
+		List<Integer> possible = new ArrayList<>();
+		
 		outer: for (int i = 0; i < moves.size(); i++) {
 			int[] move = moves.get(i);
-			Vector3f nextPoint = new Vector3f(pos.x + move[0], pos.y + move[1], 0.5f);
+			Vector3f nextPoint = new Vector3f(pos.x + move[0], pos.y + move[1], pos.z);
 			double distance = manhattanDistance(nextPoint, currentTarget);
 
 			if (!powerUP) {
 				for (Vector3f ghost : ghosts) {
 					Vector3f m = pos.subtract(ghost);
-					if ((int) m.x == move[0] && (int) m.y == move[1]) {
+
+					if (m.x * move[0] >= 0 && m.y * move[1] >= 0 && ghosts.size() == 1) {
+						possible.add(i);
 						bestIndex = i;
-						break;
 					}
-					if (manhattanDistance(ghost, nextPoint) < 2 && manhattanDistance(ghost, pos) >= manhattanDistance(ghost, nextPoint))
+
+					if (manhattanDistance(ghost, nextPoint) < 2)
 						continue outer;
 				}
 			}
+
+			if (lastVisited.contains(nextPoint) && moves.size() > 1 && ghosts.size() == 0)
+				continue;
+
 			if (distance < bestDistance) {
 				bestDistance = distance;
 				bestIndex = i;
 			}
+			possible.add(i);
 
 		}
 
+		if (rand.nextDouble() > 0.95) bestIndex = possible.get(rand.nextInt(possible.size()));
+		
 		tries++;
 
 		return bestIndex;
+
 	}
-	
+
 	private double manhattanDistance(Vector3f vec1, Vector3f vec2) {
 		return Math.abs(vec1.x - vec2.x) + Math.abs(vec1.y - vec2.y);
 	}
