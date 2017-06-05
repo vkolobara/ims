@@ -38,11 +38,12 @@ public class GhostAI extends AgentAI {
 				PosWithTimestamp metadata = null;
 				try {
 					metadata = (PosWithTimestamp) mySurroundings.getWorldMetadataAt(i, j).get(1);
+					mySurroundings.getWorldMetadataAt(i, j).put(1, null);
 				} catch (Exception e) {
 				}
 				;
 				if (metadata != null) {
-					if (mostRecentPosition == null || mostRecentPosition.compareTo(metadata) < 0)
+					if (mostRecentPosition == null || mostRecentPosition.compareTo(metadata) >= 0)
 						mostRecentPosition = metadata;
 				}
 
@@ -90,19 +91,18 @@ public class GhostAI extends AgentAI {
 
 			Vector3f m = pos.subtract(newPacmanPosition);
 			if ((int) m.x == move[0] && (int) m.y == move[1]) {
-
 				bestIndex = i;
 				break;
 			}
 
-			if (powerUpMult * Double.compare(distance, bestDistance) < 0) {
+			if (powerUpMult * Double.compare(distance, bestDistance) <= 0) {
 				bestDistance = distance;
 				bestIndex = i;
 			}
 
 		}
 
-		return bestIndex == -1 ? rand.nextInt(moves.size()) : bestIndex;
+		return bestIndex;
 	}
 
 	private double manhattanDistance(Vector3f vec1, Vector3f vec2) {
