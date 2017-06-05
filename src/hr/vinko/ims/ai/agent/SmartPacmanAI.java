@@ -75,17 +75,11 @@ public class SmartPacmanAI extends AgentAI {
 			tries = 0;
 		}
 
-		System.out.println();
 		while (currentTarget == null) {
-			System.out.println("ZAPO");
 			Vector3f target = null;
-			System.out.println(unreachableStates.size());
-			System.out.println(targetStates.size());
 			if (!unreachableStates.isEmpty()) {
 				int index = rand.nextInt(unreachableStates.size());
 				target = new ArrayList<>(unreachableStates).get(index);
-				System.out.println("CHOOSE TARGET");
-				System.out.println(target);
 			}
 			if (!targetStates.isEmpty()) {
 				target = targetStates.stream().min((s1, s2) -> Double.compare(s1.distance(pos), s2.distance(pos)))
@@ -131,15 +125,16 @@ public class SmartPacmanAI extends AgentAI {
 		outer: for (int i = 0; i < moves.size(); i++) {
 			int[] move = moves.get(i);
 			Vector3f nextPoint = new Vector3f(pos.x + move[0], pos.y + move[1], 0.5f);
-			double distance = nextPoint.distance(currentTarget);
+			double distance = manhattanDistance(nextPoint, currentTarget);
 
 			if (!powerUP) {
 				for (Vector3f ghost : ghosts) {
-					if (pos.subtract(ghost).equals(new Vector3f(move[0], move[1], 0))) {
+					Vector3f m = pos.subtract(ghost);
+					if ((int) m.x == move[0] && (int) m.y == move[1]) {
 						bestIndex = i;
 						break;
 					}
-					if (ghost.distance(nextPoint) < 2 && ghost.distance(pos) >= ghost.distance(nextPoint))
+					if (manhattanDistance(ghost, nextPoint) < 2 && manhattanDistance(ghost, pos) >= manhattanDistance(ghost, nextPoint))
 						continue outer;
 				}
 			}
@@ -153,6 +148,10 @@ public class SmartPacmanAI extends AgentAI {
 		tries++;
 
 		return bestIndex;
+	}
+	
+	private double manhattanDistance(Vector3f vec1, Vector3f vec2) {
+		return Math.abs(vec1.x - vec2.x) + Math.abs(vec1.y - vec2.y);
 	}
 
 }
