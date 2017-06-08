@@ -1,0 +1,120 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% LaTeX Example: Project Report
+%
+% Source: http://www.howtotex.com
+%
+% Feel free to distribute this example, but please keep the referral
+% to howtotex.com
+% Date: March 2011 
+% 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% How to use writeLaTeX: 
+%
+% You edit the source code here on the left, and the preview on the
+% right shows you the result within a few seconds.
+%
+% Bookmark this page and share the URL with your co-authors. They can
+% edit at the same time!
+%
+% You can upload figures, bibliographies, custom classes and
+% styles using the files menu.
+%
+% If you're new to LaTeX, the wikibook is a great place to start:
+% http://en.wikibooks.org/wiki/LaTeX
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Edit the title below to update the display in My Documents
+%\title{Project Report}
+%
+%%% Preamble
+\documentclass[paper=a4, fontsize=11pt]{scrartcl}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amsfonts,amsthm} % Math packages
+\usepackage[pdftex]{graphicx}	
+\usepackage{url}
+\usepackage[skip=2pt]{caption} % example skip set to 2pt
+\usepackage[croatian]{babel}
+\usepackage{listings}
+\usepackage{enumitem}
+
+%%% Custom sectioning
+\usepackage{sectsty}
+\allsectionsfont{\centering \normalfont\scshape}
+
+
+%%% Custom headers/footers (fancyhdr package)
+\usepackage{fancyhdr}
+\pagestyle{fancyplain}
+\fancyhead{}											% No page header
+\fancyfoot[L]{}											% Empty 
+\fancyfoot[C]{}											% Empty
+\fancyfoot[R]{\thepage}									% Pagenumbering
+\renewcommand{\headrulewidth}{0pt}			% Remove header underlines
+\renewcommand{\footrulewidth}{0pt}				% Remove footer underlines
+\setlength{\headheight}{13.6pt}
+
+
+%%% Equation and float numbering
+\numberwithin{equation}{section}		% Equationnumbering: section.eq#
+\numberwithin{figure}{section}			% Figurenumbering: section.fig#
+\numberwithin{table}{section}				% Tablenumbering: section.tab#
+
+%%% Maketitle metadata
+\newcommand{\horrule}[1]{\rule{\linewidth}{#1}} 	% Horizontal rule
+
+\title{
+		%\vspace{-1in} 	
+		\usefont{OT1}{bch}{b}{n}
+		\normalfont \normalsize \textsc{Fakultet Elektrotehnike i Računarstva} \\ [25pt]
+		\horrule{0.5pt} \\[0.4cm]
+		\huge Inteligentni multiagentski sustavi:\\Dokumentacija projekta\\
+		\horrule{2pt} \\[0.5cm]
+}
+\author{
+		\normalfont 								\normalsize
+        Vinko Kolobara\\[-3pt]		\normalsize
+        \today
+}
+\date{}
+
+
+%%% Begin document
+\begin{document}
+\maketitle
+
+\pagebreak
+
+\section{Uvod}
+
+Cilj projekta bio je osmisliti i implementirati strategiju za igru Pacman, i to i za Pacman-a, a i za duhove. Pacman za cilj ima pojesti svu hranu na mapi prije smrti, a duhovima je cilj ubijati Pacman-a i spriječiti ga u njegovoj namjeri.
+
+Za implementaciju je korišten framework koji je napravljen za potrebe predmeta. Pacman i duhovi kao agenti imaju ograničeno vidno polje, u mogućnosti su na prethodno posjećena polja ostavljati poruke drugim agentima (npr. duhovi za međusobnu komunikaciju i praćenje Pacman-a) te imaju sve potrebne informacije o vidljivim poljima (je li na polju hrana, duh, zid, pojačanje...).
+
+\section{Opis strategije agenata}
+Za oba agenta je bilo potrebno smisliti različite strategije implementirajući metodu koja u nekom stanju određuje koji sljedeći (dozvoljeni) potez će agent napraviti. Kao udaljenost se za sve agente koristi Manhattan udaljenost, s tim da se ne provjerava bi li taj put išao preko zida.
+
+\subsection{Strategija za Pacman-a}
+Pacman u svakom stanju prvo pregleda svo vidljivo polje i zapamti polja na kojim vidi hranu i pojačanje. Nakon toga odredi hranu koja mu je najbliža i nju postavi za trenutni cilj te odredi koji će ga od trenutno dozvoljenih poteza odvesti najbliže cilju. 
+
+Ako se blizu te pozicije nalazi duh, onda će krenuti u smjeru suprotnom od duha iako će se tako udaljavati od svog cilja. U slučaju da je pokupio pojačanje, jednostavno će ignorirati duhove i ići prema ciljnom stanju. 
+
+Također, pamti i zadnjih 5 stanja u kojima je bio i pokušat će ne doći ponovno u ta stanja ako ikako može. 
+
+Dodatno, moguće je da Pacman nakon nekog vremena ne uspije doći do ciljnog stanja i tada se to stanje skloni iz liste ciljnih stanja i spremi u drugu listu koja pamti stanja u koja je pokušao ići, ali nije uspio. U tom slučaju, ali i u slučaju da uspije doći do ciljnog stanja, ponovno traži najbliže polje s hranom i njega postavlja kao ciljno. 
+
+Ako lista sa ciljnim stanjima ostane prazna, a nije kraj igre, to znači da u neuspjelim stanjima postoje stanja i tada bira nasumično neko od tih stanja umjesto najbližeg.
+
+\subsection{Strategija za duhove}
+Duhovi također prvo pregledaju vidljivo polje i provjeravaju postoji li na nekom od tih stanja zapis da je Pacman tu bio ili da je Pacman trenutno tu. Ako je to istina, a i ako Pacman nema pojačanje, to stanje se postavlja kao ciljno i određuje se sljedeći potez koji će ga dovesti najbliže cilju. 
+
+Ako Pacman ima pojačanje i duh je blizu polja na kojem se Pacman nalazi, duh će krenuti u suprotnom smjeru od Pacman-a. Tako duh još uvijek može pratiti Pacman-a, ali sa sigurne udaljenosti da ne bude pojeden. 
+
+Ako je duh vidio Pacman-a, na to stanje zapisuje da je vidio Pacman-a kako bi drugi duhovi znali. Nakon nekog vremena, ta informacija se ukloni (ako su duhovi dovoljno puta vidjeli poruku). 
+
+Ako duh ne vidi Pacman-a (ili ga izgubi iz vidnog polja), a ni nema polja na kojem piše da je Pacman tu bio, onda duh bira nasumični smjer, s tim da pamti prethodnih 15 stanja u kojima je bio i trudi se ne ići u ta stanja. Tako je omogućeno istraživanje prostora duhovima.
+
+\section{Zaključak}
+Kao konačni rezultat, implementirana je relativno uspješna strategija za obje vrste agenata. U ovoj implementaciji, Pacman je uglavnom gubitnik. Razlog tome je što on ima dosta složeniji zadatak od duhova, mora tražiti hranu, najbolji put do hrane, izbjegavati duhove i sl., dok duhovi za cilj imaju samo pojesti Pacman-a i istraživati stanja dok ga ne vide.
+
+\end{document}
